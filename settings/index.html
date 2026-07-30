@@ -8,12 +8,11 @@
             data-origin="settings"
     ></script>
     <style>
-        .warning {
-            display: none;
-            border-radius: 4px;
-            border: 1px solid transparent;
-            background: rgb(255, 167, 169);
-            padding: 12px;
+        #local-logs {
+          max-height: 480px;
+          overflow: auto;
+          white-space: pre-wrap;
+          word-break: break-word;
         }
     </style>
 </head>
@@ -25,72 +24,39 @@
 </header>
 
 <div class="homey-form-group">
-    <h1 class="homey-title">Logging & diagnostics</h1>
+  <h1 class="homey-title">Local logs</h1>
     <ul class="homey-subtitle">
         <li>App events and errors</li>
         <li>API calls to Vaillant</li>
-        <li>All data is removed after 14 days</li>
     </ul>
-
-    <fieldset class="homey-form-checkbox-set">
-        <label class="homey-form-checkbox">
-            <input class="homey-form-checkbox-input" type="checkbox" name="checkbox-logging-enabled"
-                   id="logging-enabled"/>
-            <span class="homey-form-checkbox-checkmark"></span>
-            <span class="homey-form-checkbox-text">Enable logging</span>
-        </label>
-    </fieldset>
-    <div class="homey-form-group" id="logging-id-field">
-        <label class="homey-form-label" for="logging-id">Logging id<br>(you can share this with the developer to
-            identify you're logs)</label>
-        <input class="homey-form-input" id="logging-id" type="text" readonly disabled/>
-    </div>
-</div>
-<div class="warning" id="restart-warning">
-    ⚠️ <strong>Warning:</strong> Restart the myVaillant app to apply the changes!
+  <pre id="local-logs">Loading logs...</pre>
 </div>
 
 <script type="text/javascript">
   function onHomeyReady(Homey) {
     Homey.ready();
 
-    var loggingEnabledElement = document.getElementById('logging-enabled');
-    var loggingIdElement = document.getElementById('logging-id');
-
-    Homey.get('loggingEnabled', function(err, loggingEnabled) {
-      loggingEnabledElement.checked = loggingEnabled;
-
-      if (loggingEnabled) {
-        showLoggingId(true);
-      } else {
-        showLoggingId(false);
-      }
-    });
-
-    loggingEnabledElement.addEventListener('change', function(element) {
-      Homey.set('loggingEnabled', element.target.checked);
-
-      showRestartWarning();
-    });
-
-    Homey.get('loggingId', function(err, loggingId) {
-      loggingIdElement.value = loggingId;
+    Homey.get('localLogs', function(err, localLogs) {
+      showLocalLogs(err ? [] : localLogs);
     });
   }
 
-  function showLoggingId(show) {
-    var loggingEnabledFieldElement = document.getElementById('logging-id-field');
+  function showLocalLogs(localLogs) {
+    var localLogsElement = document.getElementById('local-logs');
+    var logs = Array.isArray(localLogs) ? localLogs : [];
 
-    if (show) {
-      loggingEnabledFieldElement.style.display = 'block';
-    } else {
-      loggingEnabledFieldElement.style.display = 'none';
+    logs.sort(function(firstLog, secondLog) {
+      return new Date(secondLog.timestamp) - new Date(firstLog.timestamp);
+    });
+
+    if (logs.length === 0) {
+      localLogsElement.textContent = 'No local logs recorded yet.';
+      return;
     }
-  }
 
-  function showRestartWarning() {
-    var restartWarningElement = document.getElementById('restart-warning');
-    restartWarningElement.style.display = 'block';
+    localLogsElement.textContent = logs.map(function(log) {
+      return JSON.stringify(log);
+    }).join('\n');
   }
 </script>
 </body>
