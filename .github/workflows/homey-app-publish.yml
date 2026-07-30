@@ -64,13 +64,6 @@ jobs:
         run: |
           git pull origin master
 
-      - name: Create env.json
-        run: |
-          echo '{
-            "GRAFANA_LOKI_HOST": "${{ secrets.GRAFANA_LOKI_HOST }}",
-            "GRAFANA_LOKI_TOKEN": "${{ secrets.GRAFANA_LOKI_TOKEN }}"
-          }' > env.json
-
       - name: Publish Homey App
         uses: athombv/github-action-homey-app-publish@master
         id: publish
